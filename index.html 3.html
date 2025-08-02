@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ruta Romántica para Sona</title>
+  <style>
+    body, html {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(to bottom, #ffe4ec, #fff0f5);
+      overflow: hidden;
+      position: relative;
+    }
+    #map {
+      width: 100vw;
+      height: 100vh;
+      opacity: 0;
+      transition: opacity 2s ease;
+      z-index: 0;
+    }
+    .message {
+      position: absolute;
+      background: #fff0f5;
+      border: 1px solid #ffb6c1;
+      padding: 10px;
+      border-radius: 10px;
+      max-width: 200px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      display: none;
+      z-index: 3;
+      animation: msgPop 0.5s ease forwards;
+    }
+    .gift-button {
+      position: absolute;
+      bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 20px;
+      background: #ff69b4;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 16px;
+      text-decoration: none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transition: background 0.3s;
+      z-index: 3;
+      animation: pulse 2.5s infinite;
+      cursor: pointer;
+    }
+    .gift-button:hover {
+      background: #ff85c1;
+    }
+    @keyframes msgPop {
+      0% { transform: scale(0.9); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .heart {
+      position: absolute;
+      width: 15px; height: 15px;
+      background: pink;
+      transform: rotate(45deg);
+      animation: float 2s ease-out forwards;
+      z-index: 1000;
+      pointer-events: none;
+    }
+    .heart::before, .heart::after {
+      content: "";
+      position: absolute;
+      width: 15px; height: 15px;
+      background: pink;
+      border-radius: 50%;
+    }
+    .heart::before {
+      top: -7.5px;
+      left: 0;
+    }
+    .heart::after {
+      left: -7.5px;
+      top: 0;
+    }
+    @keyframes float {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-120px) scale(1.5); }
+    }
+    /* Intro screen */
+    #intro {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: linear-gradient(to bottom, #ffdae8, #ffcde3);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      color: #880e4f;
+      font-size: 1.6em;
+      padding: 20px;
+      z-index: 10;
+      user-select: none;
+      animation: fadeInIntro 2s ease forwards;
+    }
+    #intro p {
+      margin-bottom: 1.5em;
+      line-height: 1.3;
+      white-space: pre-line;
+      opacity: 0;
+      animation: textFadeIn 2s forwards;
+      animation-delay: 0.5s;
+    }
+    #intro button {
+      padding: 14px 30px;
+      font-size: 1.3em;
+      background: #ff69b4;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: background 0.3s;
+      opacity: 0;
+      animation: btnFadeIn 2s forwards;
+      animation-delay: 2.5s;
+    }
+    #intro button:hover {
+      background: #ff85c1;
+    }
+    @keyframes fadeInIntro {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+    @keyframes textFadeIn {
+      to {opacity: 1;}
+    }
+    @keyframes btnFadeIn {
+      to {opacity: 1;}
+    }
+
+    /* Пульсация кнопки */
+    @keyframes pulse {
+      0%, 100% { transform: translateX(-50%) scale(1); }
+      50% { transform: translateX(-50%) scale(1.1); }
+    }
+
+    /* Фоновый слой для сердечек */
+    #heart-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .heart-bg-item {
+      position: absolute;
+      width: 20px; height: 20px;
+      background: rgba(255, 105, 180, 0.3);
+      transform: rotate(45deg);
+      border-radius: 15%;
+      animation-name: heartFall;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+    @keyframes heartFall {
+      0% {
+        opacity: 1;
+        transform: translateY(0) rotate(45deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(110vh) rotate(45deg);
+      }
+    }
+  </style>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDuPhM29_V__AmnO0XC5DlWSzMgEk3nfro"></script>
+</head>
+<body>
+
+  <div id="heart-bg"></div>
+
+  <div id="intro">
+    <p>
+      Hola mi amor, Sona...<br>
+      Esta no es solo una ruta en el mapa.<br>
+      Es nuestro camino, lleno de recuerdos, sonrisas y amor.<br>
+      ¿Estás lista para descubrir cada rincón de nuestro corazón?
+    </p>
+    <button id="startBtn">Empezar 💖</button>
+  </div>
+
+  <audio id="music" loop>
+    <source src="https://www.bensound.com/bensound-music/bensound-love.mp3" type="audio/mpeg" />
+  </audio>
+
+  <div id="map"></div>
+  <div class="message" id="msgBox"></div>
+  <a href="https://turegaloromantico.com" class="gift-button" target="_blank">Abrir el regalo 🎁</a>
+
+  <script>
+    const locations = [
+      { lat: 40.195168, lng: 44.515099, msg: "Aquí empezó todo... 🌸" },       // 1
+      { lat: 40.191508, lng: 44.505955, msg: "Un momento inolvidable... 💕" },  // 2
+      { lat: 40.176017, lng: 44.507433, msg: "Te tomé de la mano... 🤍" },      // 3
+      { lat: 40.193313, lng: 44.481324, msg: "Mi corazón late por ti... ❤️" }   // 4
+    ];
+
+    let polyline;
+    let map;
+
+    // Получить путь с S-образными изгибами
+    function getCustomPath(points, segments = 100) {
+      const path = [];
+
+      // Отрезок 0->1 (умеренный изгиб)
+      for (let t = 0; t <= 1; t += 1/segments) {
+        const start = points[0];
+        const end = points[1];
+        let lat = start.lat + (end.lat - start.lat) * t;
+        let lng = start.lng + (end.lng - start.lng) * t;
+        let offset = Math.sin(t * Math.PI) * 0.005;
+        lat += offset;
+        path.push({lat, lng});
+      }
+
+      // Отрезок 1->2 (прямая линия)
+      for (let t = 0; t <= 1; t += 1/segments) {
+        const start = points[1];
+        const end = points[2];
+        let lat = start.lat + (end.lat - start.lat) * t;
+        let lng = start.lng + (end.lng - start.lng) * t;
+        path.push({lat, lng});
+      }
+
+      // Отрезок 2->3 (изгиб вниз и влево)
+      for (let t = 0; t <= 1; t += 1/segments) {
+        const start = points[2];
+        const end = points[3];
+        let lat = start.lat + (end.lat - start.lat) * t;
+        let lng = start.lng + (end.lng - start.lng) * t;
+        let offsetLat = -Math.sin(t * Math.PI) * 0.01;
+        let offsetLng = -Math.sin(t * Math.PI) * 0.005;
+        lat += offsetLat;
+        lng += offsetLng;
+        path.push({lat, lng});
+      }
+
+      return path;
+    }
+
+    // SVG иконка сердца для маркеров на линии
+    const heartIcon = {
+      path: "M10 30 A20 20 0 0 1 50 30 Q50 60 25 80 Q0 60 0 30 A20 20 0 0 1 10 30 Z",
+      fillColor: "#ff69b4",
+      fillOpacity: 1,
+      strokeWeight: 0,
+      scale: 0.1,
+      anchor: new google.maps.Point(25, 30),
+    };
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 13,
+        center: locations[0],
+        styles: [
+          { elementType: "geometry", stylers: [{ color: "#fce4ec" }] },
+          { elementType: "labels.text.fill", stylers: [{ color: "#880e4f" }] },
+          { elementType: "labels.text.stroke", stylers: [{ color: "#fce4ec" }] },
+          { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#f8bbd0" }] }
+        ]
+      });
+
+      const msgBox = document.getElementById('msgBox');
+
+      locations.forEach((loc) => {
+        const marker = new google.maps.Marker({
+          position: loc,
+          map,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "#ff69b4",
+            fillOpacity: 1,
+            strokeWeight: 2,
+            strokeColor: "#fff"
+          },
+          animation: google.maps.Animation.DROP
+        });
+
+        marker.addListener('click', () => {
+          msgBox.innerText = loc.msg;
+          msgBox.style.display = 'block';
+          msgBox.style.top = '60px';
+          msgBox.style.left = '20px';
+          msgBox.style.opacity = '0';
+          setTimeout(() => {
+            msgBox.style.opacity = '1';
+            msgBox.style.transform = 'scale(1)';
+          }, 50);
+        });
+      });
+
+      const customPath = getCustomPath(locations, 120);
+
+      // Создаём линию из сердечек, без анимации движения
+      polyline = new google.maps.Polyline({
+        path: customPath,
+        geodesic: true,
+        strokeOpacity: 0,  // линия прозрачна, видны только иконки
+        icons: [{
+          icon: heartIcon,
+          offset: '0',
+          repeat: '15px'
+        }],
+        map: map
+      });
+
+      // Убираем исчезновение линии по клику (если не нужно)
+      // map.addListener("click", () => {
+      //   polyline.setMap(null);
+      // });
+    }
+
+    // Фоновые медленные падающие сердечки
+    function createBackgroundHearts() {
+      const container = document.getElementById('heart-bg');
+      const colors = [
+        'rgba(255, 105, 180, 0.3)',
+        'rgba(255, 182, 193, 0.3)',
+        'rgba(255, 20, 147, 0.3)'
+      ];
+
+      for(let i = 0; i < 25; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'heart-bg-item';
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.width = heart.style.height = (10 + Math.random() * 15) + 'px';
+        heart.style.background = colors[Math.floor(Math.random() * colors.length)];
+        heart.style.animationDuration = (7 + Math.random() * 6) + 's';
+        heart.style.animationDelay = (Math.random() * 10) + 's';
+        container.appendChild(heart);
+      }
+    }
+
+    const intro = document.getElementById('intro');
+    const startBtn = document.getElementById('startBtn');
+    const mapDiv = document.getElementById('map');
+    const music = document.getElementById('music');
+
+    startBtn.onclick = () => {
+      intro.style.opacity = '0';
+      setTimeout(() => {
+        intro.style.display = 'none';
+        mapDiv.style.opacity = '1';
+        music.play();
+        initMap();
+        createBackgroundHearts();
+      }, 1000);
+    };
+
+    // Создаём сердечки при клике (кроме кнопки подарка)
+    document.body.addEventListener('click', (e) => {
+      if (!e.target.closest('.gift-button')) {
+        const heart = document.createElement('div');
+        heart.className = 'heart';
+        heart.style.left = e.clientX + 'px';
+        heart.style.top = e.clientY + 'px';
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 2000);
+      }
+    });
+  </script>
+</body>
+</html>
